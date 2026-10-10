@@ -34,6 +34,11 @@
                 🗺️ 3. Mapa Interactivo (API Google)
             </a>
 
+            <!-- NUEVO BOTÓN PARA EL VIDEO -->
+            <a href="video.php" class="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg">
+                ▶️ 4. Mi Video (Incrustado)
+            </a>
+
         </div>
     </div>
 
