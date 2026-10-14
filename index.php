@@ -39,6 +39,11 @@
                 ▶️ 4. Mi Video (Incrustado)
             </a>
 
+            <!-- NUEVO BOTÓN PARA EL LOGIN -->
+            <a href="login.php" class="flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg">
+                🔐 5. Sistema de Login y Registro
+            </a>
+
         </div>
     </div>
 
