@@ -1,20 +1,17 @@
 <?php
 require 'conexion.php';
 
-// Si ya tiene sesión activa, no necesita recuperar contraseña
 if (isset($_SESSION['usuario_id'])) {
     header('Location: index.php');
     exit;
 }
 
-// Opción para cancelar el proceso y volver al paso 1
 if (isset($_GET['cancelar'])) {
     unset($_SESSION['reset_uid'], $_SESSION['reset_correo'], $_SESSION['reset_token'], $_SESSION['reset_expira']);
     header('Location: recuperar.php');
     exit;
 }
 
-// Verificar si el token temporal de recuperación ya expiró (5 minutos)
 if (isset($_SESSION['reset_expira']) && time() > $_SESSION['reset_expira']) {
     unset($_SESSION['reset_uid'], $_SESSION['reset_correo'], $_SESSION['reset_token'], $_SESSION['reset_expira']);
     $error = 'El tiempo de seguridad expiró. Por favor valida tus datos nuevamente.';
@@ -27,21 +24,21 @@ $paso = isset($_SESSION['reset_uid']) ? 2 : 1;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accion = $_POST['accion'] ?? '';
 
-    // PASO 1: Verificar identidad del usuario en la base de datos
+    // PASO 1: Verificación exacta e invariable con Fecha de Nacimiento
     if ($accion === 'verificar') {
-        $correo = trim($_POST['correo'] ?? '');
-        $sexo   = $_POST['sexo'] ?? '';
-        $edad   = (int) ($_POST['edad'] ?? 0);
+        $correo           = trim($_POST['correo'] ?? '');
+        $sexo             = $_POST['sexo'] ?? '';
+        $fecha_nacimiento = trim($_POST['fecha_nacimiento'] ?? '');
 
-        $stmt = $pdo->prepare('SELECT id, correo FROM usuarios WHERE correo = ? AND sexo = ? AND edad = ?');
-        $stmt->execute([$correo, $sexo, $edad]);
+        $stmt = $pdo->prepare('SELECT id, correo FROM usuarios WHERE correo = ? AND sexo = ? AND fecha_nacimiento = ?');
+        $stmt->execute([$correo, $sexo, $fecha_nacimiento]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($usuario) {
             $_SESSION['reset_uid']    = $usuario['id'];
             $_SESSION['reset_correo'] = $usuario['correo'];
             $_SESSION['reset_token']  = bin2hex(random_bytes(32));
-            $_SESSION['reset_expira'] = time() + 300; // 5 minutos de vigencia
+            $_SESSION['reset_expira'] = time() + 300;
             $paso = 2;
         } else {
             $error = 'Los datos ingresados no coinciden con ninguna cuenta registrada.';
@@ -65,7 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare('UPDATE usuarios SET password_hash = ? WHERE id = ?');
             $stmt->execute([$nuevoHash, $_SESSION['reset_uid']]);
 
-            // Limpiar variables temporales de recuperación
             unset($_SESSION['reset_uid'], $_SESSION['reset_correo'], $_SESSION['reset_token'], $_SESSION['reset_expira']);
 
             header('Location: login.php?recuperado=1');
@@ -86,13 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <main class="bg-white max-w-md w-full p-8 rounded-2xl shadow-xl border border-gray-200">
         
         <?php if ($paso === 1): ?>
-            <!-- VISTA PASO 1: VALIDAR IDENTIDAD -->
             <div class="text-center mb-6">
                 <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl shadow-sm">
                     🛡️
                 </div>
                 <h1 class="text-2xl font-extrabold text-gray-900">Recuperar contraseña</h1>
-                <p class="text-gray-500 text-sm mt-1">Confirma los datos de tu cuenta para validar tu identidad</p>
+                <p class="text-gray-500 text-sm mt-1">Confirma los datos exactos de tu cuenta</p>
             </div>
 
             <?php if ($error): ?>
@@ -113,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Sexo registrado</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Sexo</label>
                         <select name="sexo" required class="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none bg-white">
                             <option value="">Selecciona…</option>
                             <?php foreach (['Hombre', 'Mujer', 'Otro'] as $opcion): ?>
@@ -122,10 +117,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Edad registrada</label>
-                        <input type="number" name="edad" min="15" max="99" required value="<?= e($_POST['edad'] ?? '') ?>"
-                            placeholder="Ej. 28"
-                            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Fecha de nacimiento</label>
+                        <input type="date" name="fecha_nacimiento" required value="<?= e($_POST['fecha_nacimiento'] ?? '') ?>"
+                            class="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none bg-white">
                     </div>
                 </div>
 
@@ -135,7 +129,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
 
         <?php else: ?>
-            <!-- VISTA PASO 2: CREAR NUEVA CONTRASEÑA -->
             <div class="text-center mb-6">
                 <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl shadow-sm">
                     🔑

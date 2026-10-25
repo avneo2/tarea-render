@@ -4,26 +4,40 @@ require 'conexion.php';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nombre    = trim($_POST['nombre'] ?? '');
-    $correo    = trim($_POST['correo'] ?? '');
-    $sexo      = $_POST['sexo'] ?? '';
-    $edad      = (int) ($_POST['edad'] ?? 0);
-    $carrera   = trim($_POST['carrera'] ?? '');
-    $password  = $_POST['password'] ?? '';
-    $confirmar = $_POST['confirmar'] ?? '';
+    $nombre           = trim($_POST['nombre'] ?? '');
+    $correo           = trim($_POST['correo'] ?? '');
+    $sexo             = $_POST['sexo'] ?? '';
+    $fecha_nacimiento = trim($_POST['fecha_nacimiento'] ?? '');
+    $carrera          = trim($_POST['carrera'] ?? '');
+    $password         = $_POST['password'] ?? '';
+    $confirmar        = $_POST['confirmar'] ?? '';
+
+    // Calcular la edad exacta al día de hoy a partir de la fecha de nacimiento
+    $edad = 0;
+    $fechaValida = false;
+    if ($fecha_nacimiento !== '') {
+        $fechaNacObj = DateTime::createFromFormat('Y-m-d', $fecha_nacimiento);
+        if ($fechaNacObj && $fechaNacObj->format('Y-m-d') === $fecha_nacimiento) {
+            $hoy = new DateTime('today');
+            if ($fechaNacObj < $hoy) {
+                $edad = $fechaNacObj->diff($hoy)->y;
+                $fechaValida = true;
+            }
+        }
+    }
 
     if ($nombre === '' || $carrera === '' || !filter_var($correo, FILTER_VALIDATE_EMAIL)
-        || !in_array($sexo, ['Hombre', 'Mujer', 'Otro'], true) || $edad < 15 || $edad > 99) {
-        $error = 'Revisa que todos los datos sean válidos.';
+        || !in_array($sexo, ['Hombre', 'Mujer', 'Otro'], true) || !$fechaValida || $edad < 15 || $edad > 99) {
+        $error = 'Revisa que todos los datos sean válidos (debes tener entre 15 y 99 años).';
     } elseif (strlen($password) < 8) {
         $error = 'La contraseña debe tener al menos 8 caracteres.';
     } elseif ($password !== $confirmar) {
         $error = 'Las contraseñas no coinciden.';
     } else {
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $sql = 'INSERT INTO usuarios (nombre, correo, sexo, edad, carrera, password_hash) VALUES (?, ?, ?, ?, ?, ?)';
+        $sql = 'INSERT INTO usuarios (nombre, correo, sexo, edad, fecha_nacimiento, carrera, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?)';
         try {
-            $pdo->prepare($sql)->execute([$nombre, $correo, $sexo, $edad, $carrera, $hash]);
+            $pdo->prepare($sql)->execute([$nombre, $correo, $sexo, $edad, $fecha_nacimiento, $carrera, $hash]);
             header('Location: login.php?registrado=1');
             exit;
         } catch (PDOException $ex) {
@@ -78,9 +92,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Edad</label>
-                    <input type="number" name="edad" min="15" max="99" required value="<?= e($_POST['edad'] ?? '') ?>"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Fecha de nacimiento</label>
+                    <input type="date" name="fecha_nacimiento" required value="<?= e($_POST['fecha_nacimiento'] ?? '') ?>"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                 </div>
             </div>
             <div>

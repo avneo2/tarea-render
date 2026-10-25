@@ -6,9 +6,17 @@ if (!isset($_SESSION['usuario_id'])) {
     exit;
 }
 
-$stmt = $pdo->prepare('SELECT nombre, correo, sexo, edad, carrera FROM usuarios WHERE id = ?');
+$stmt = $pdo->prepare('SELECT nombre, correo, sexo, edad, fecha_nacimiento, carrera FROM usuarios WHERE id = ?');
 $stmt->execute([$_SESSION['usuario_id']]);
 $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Calcular edad exacta en tiempo real si existe fecha_nacimiento
+$edadExacta = $usuario['edad'];
+if (!empty($usuario['fecha_nacimiento'])) {
+    $nac = new DateTime($usuario['fecha_nacimiento']);
+    $hoy = new DateTime('today');
+    $edadExacta = $nac->diff($hoy)->y;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -36,8 +44,8 @@ $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
                 <span class="text-gray-900"><?= e($usuario['sexo']) ?></span>
             </li>
             <li class="flex justify-between border-b border-gray-200 pb-2">
-                <span class="font-bold text-gray-600">Edad:</span> 
-                <span class="text-gray-900"><?= e($usuario['edad']) ?> años</span>
+                <span class="font-bold text-gray-600">Edad actual:</span> 
+                <span class="text-gray-900"><?= e((string)$edadExacta) ?> años</span>
             </li>
             <li class="flex justify-between">
                 <span class="font-bold text-gray-600">Carrera:</span> 
@@ -46,11 +54,11 @@ $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
         </ul>
 
         <div class="flex flex-col gap-3">
+            <a href="index.php" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg">
+                ⬅️ Ir al portafolio principal
+            </a>
             <a href="logout.php" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg">
                 🚪 Cerrar sesión
-            </a>
-            <a href="index.php" class="text-sm text-gray-500 hover:text-gray-800 font-medium mt-2">
-                ⬅️ Ir al portafolio principal
             </a>
         </div>
     </main>
