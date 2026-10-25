@@ -21,7 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         session_regenerate_id(true);
         $_SESSION['usuario_id'] = $usuario['id'];
         $_SESSION['nombre']     = $usuario['nombre'];
-        // Redirige al portafolio principal ya desbloqueado
         header('Location: index.php');
         exit;
     }
@@ -50,6 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
 
+        <?php if (isset($_GET['recuperado'])): ?>
+            <div class="bg-emerald-50 border border-emerald-300 text-emerald-700 px-4 py-3 rounded-xl mb-4 text-sm font-medium text-center">
+                🔑 Contraseña restablecida con éxito. Inicia sesión con tu nueva clave.
+            </div>
+        <?php endif; ?>
+
         <?php if ($error): ?>
             <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm font-medium text-center">
                 ⚠️ <?= e($error) ?>
@@ -63,7 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
             </div>
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Contraseña</label>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block text-sm font-semibold text-gray-700">Contraseña</label>
+                    <a href="recuperar.php" class="text-xs text-emerald-600 hover:underline font-semibold">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
                 <input type="password" name="password" required 
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
             </div>
