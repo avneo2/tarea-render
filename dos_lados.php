@@ -1,4 +1,11 @@
 <?php
+require 'conexion.php';
+if (!isset($_SESSION['usuario_id'])) {
+    header('Location: login.php');
+    exit;
+}
+?>
+<?php
 // ================================================================
 // dos_lados.php
 // Aplicaciones Web (APW) - Unidad I. Introducción al desarrollo web

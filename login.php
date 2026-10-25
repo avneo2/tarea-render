@@ -1,6 +1,12 @@
 <?php
 require 'conexion.php';
 
+// Si ya tiene sesión iniciada, lo mandamos directo al portafolio
+if (isset($_SESSION['usuario_id'])) {
+    header('Location: index.php');
+    exit;
+}
+
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,7 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         session_regenerate_id(true);
         $_SESSION['usuario_id'] = $usuario['id'];
         $_SESSION['nombre']     = $usuario['nombre'];
-        header('Location: bienvenida.php');
+        // Redirige al portafolio principal ya desbloqueado
+        header('Location: index.php');
         exit;
     }
     $error = 'Correo o contraseña incorrectos.';
@@ -32,8 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 font-sans text-gray-800 antialiased">
     <main class="bg-white max-w-md w-full p-8 rounded-2xl shadow-xl border border-gray-200">
         <div class="text-center mb-6">
-            <h1 class="text-2xl font-extrabold text-gray-900">🔐 Iniciar sesión</h1>
-            <p class="text-gray-500 text-sm mt-1">Ingresa tus credenciales para acceder</p>
+            <img src="foto_alex.jpg" alt="Foto de Alex" class="w-20 h-20 mx-auto rounded-full object-cover border-2 border-emerald-600 shadow-sm mb-3">
+            <h1 class="text-2xl font-extrabold text-gray-900">🔐 Acceso al Portafolio</h1>
+            <p class="text-gray-500 text-sm mt-1">Inicia sesión para navegar en los proyectos</p>
         </div>
 
         <?php if (isset($_GET['registrado'])): ?>
@@ -60,17 +68,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
             </div>
             <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg mt-2">
-                Entrar
+                Entrar al sitio
             </button>
         </form>
 
         <p class="text-center text-sm text-gray-600 mt-6">
             ¿No tienes cuenta? <a href="registro.php" class="text-emerald-600 font-bold hover:underline">Regístrate aquí</a>
         </p>
-
-        <div class="mt-6 pt-4 border-t border-gray-100 text-center">
-            <a href="index.php" class="text-sm text-gray-500 hover:text-gray-800 font-medium">⬅️ Volver al menú principal</a>
-        </div>
     </main>
 </body>
 </html>
