@@ -1,9 +1,19 @@
 <?php
 require 'conexion.php';
 
-// CANDADO DE SEGURIDAD: Si no hay sesión activa, rebota al login
+// CANDADO 1: Si no hay sesión activa, rebota al login
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
+    exit;
+}
+
+// CANDADO 2: Si es una cuenta vieja sin rostro o sin fecha de nacimiento, lo obliga a configurarlos en su perfil
+$stmtCheck = $pdo->prepare('SELECT rostro_descriptor, fecha_nacimiento FROM usuarios WHERE id = ?');
+$stmtCheck->execute([$_SESSION['usuario_id']]);
+$datosSeguridad = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+if (empty($datosSeguridad['rostro_descriptor']) || empty($datosSeguridad['fecha_nacimiento'])) {
+    header('Location: bienvenida.php?obligatorio=1');
     exit;
 }
 ?>

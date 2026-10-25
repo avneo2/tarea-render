@@ -26,11 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Validamos el vector biométrico si fue capturado
-    $vectorValido = null;
-    if ($rostro_raw !== '') {
-        $vectorValido = validarDescriptorFacial($rostro_raw);
-    }
+    // CANDADO ESTRICTO EN BACKEND: El vector biométrico es obligatorio
+    $vectorValido = validarDescriptorFacial($rostro_raw);
 
     if ($nombre === '' || $carrera === '' || !filter_var($correo, FILTER_VALIDATE_EMAIL)
         || !in_array($sexo, ['Hombre', 'Mujer', 'Otro'], true) || !$fechaValida || $edad < 15 || $edad > 99) {
@@ -39,11 +36,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'La contraseña debe tener al menos 8 caracteres.';
     } elseif ($password !== $confirmar) {
         $error = 'Las contraseñas no coinciden.';
-    } elseif ($rostro_raw !== '' && $vectorValido === null) {
-        $error = 'El registro biométrico facial no es válido. Intenta capturar tu rostro de nuevo.';
+    } elseif ($vectorValido === null) {
+        $error = 'Es obligatorio escanear y registrar tu rostro biométrico para crear una cuenta.';
     } else {
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $rostroJson = $vectorValido ? json_encode($vectorValido) : null;
+        $rostroJson = json_encode($vectorValido);
 
         $sql = 'INSERT INTO usuarios (nombre, correo, sexo, edad, fecha_nacimiento, carrera, password_hash, rostro_descriptor) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
         try {
@@ -64,15 +61,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro Biométrico - Portafolio Alex</title>
+    <title>Registro Biométrico Obligatorio - Portafolio Alex</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 font-sans text-gray-800 antialiased">
     <main class="bg-white max-w-md w-full p-8 rounded-2xl shadow-xl border border-gray-200 my-8">
         <div class="text-center mb-6">
-            <h1 class="text-2xl font-extrabold text-gray-900">📝 Crear cuenta</h1>
-            <p class="text-gray-500 text-sm mt-1">Completa tus datos y registra tu biometría facial</p>
+            <h1 class="text-2xl font-extrabold text-gray-900">📝 Crear cuenta segura</h1>
+            <p class="text-gray-500 text-sm mt-1">Todos los campos y el registro facial son obligatorios</p>
         </div>
 
         <?php if ($error): ?>
@@ -82,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form id="form-registro" method="post" class="space-y-4">
-            <input type="hidden" name="rostro_descriptor" id="rostro_descriptor">
+            <input type="hidden" name="rostro_descriptor" id="rostro_descriptor" required>
 
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Nombre completo</label>
@@ -126,28 +123,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
 
-            <!-- MÓDULO DE RECONOCIMIENTO FACIAL -->
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
-                <p class="text-xs font-bold text-slate-700 mb-2">👤 Biometría Facial (Acceso Rápido y Seguro)</p>
+            <!-- MÓDULO DE RECONOCIMIENTO FACIAL OBLIGATORIO -->
+            <div id="caja-biometria" class="bg-amber-50 p-4 rounded-xl border border-amber-300 text-center transition-all">
+                <p class="text-xs font-bold text-amber-900 mb-2">🔒 Biometría Facial (Requisito Obligatorio *)</p>
                 
                 <div id="contenedor-camara" class="hidden relative mx-auto w-56 h-44 bg-black rounded-lg overflow-hidden mb-3 border-2 border-indigo-500">
                     <video id="video" autoplay muted playsinline class="w-full h-full object-cover"></video>
                 </div>
 
-                <p id="estado-facial" class="text-xs text-slate-500 mb-2">Opcional: Registra tu rostro para iniciar sesión sin contraseña.</p>
+                <p id="estado-facial" class="text-xs text-amber-800 mb-3 font-medium">
+                    Debes escanear tu rostro para habilitar el botón de registro.
+                </p>
 
                 <div class="flex gap-2 justify-center">
-                    <button type="button" id="btn-activar-camara" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-all">
-                        📷 Activar Cámara
+                    <button type="button" id="btn-activar-camara" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2.5 px-4 rounded-lg transition-all shadow">
+                        📷 Activar Cámara para Escaneo
                     </button>
-                    <button type="button" id="btn-capturar-rostro" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-all">
-                        ✨ Escanear Rostro
+                    <button type="button" id="btn-capturar-rostro" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2.5 px-4 rounded-lg transition-all shadow">
+                        ✨ Capturar Mi Rostro
                     </button>
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg mt-2">
-                Registrarme
+            <!-- Botón deshabilitado hasta que se capture el rostro -->
+            <button type="submit" id="btn-registrar" disabled
+                class="w-full bg-gray-400 cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md mt-2">
+                🔒 Escanea tu rostro para registrarte
             </button>
         </form>
 
@@ -161,6 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
         const btnActivar = document.getElementById('btn-activar-camara');
         const btnCapturar = document.getElementById('btn-capturar-rostro');
+        const btnRegistrar = document.getElementById('btn-registrar');
+        const cajaBiometria = document.getElementById('caja-biometria');
         const contenedorCamara = document.getElementById('contenedor-camara');
         const video = document.getElementById('video');
         const estadoFacial = document.getElementById('estado-facial');
@@ -185,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 contenedorCamara.classList.remove('hidden');
                 btnActivar.classList.add('hidden');
                 btnCapturar.classList.remove('hidden');
-                estadoFacial.textContent = 'Mira de frente a la cámara con buena iluminación y presiona Escanear.';
+                estadoFacial.textContent = 'Mira de frente a la cámara con buena iluminación y presiona Capturar Mi Rostro.';
             } catch (err) {
                 btnActivar.disabled = false;
                 estadoFacial.textContent = '❌ No se pudo acceder a la cámara: ' + err.message;
@@ -200,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 .withFaceDescriptor();
 
             if (!deteccion) {
-                estadoFacial.textContent = '⚠️ No se detectó tu rostro. Acércate un poco más e intenta de nuevo.';
+                estadoFacial.textContent = '⚠️ No se detectó tu rostro claramente. Acércate e intenta de nuevo.';
                 return;
             }
 
@@ -210,7 +213,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             contenedorCamara.classList.add('hidden');
             btnCapturar.classList.add('hidden');
-            estadoFacial.innerHTML = '<span class="text-emerald-600 font-bold">✅ ¡Rostro escaneado y cifrado con éxito! Ya puedes finalizar tu registro.</span>';
+
+            // Cambiar estilo a verde verificado y desbloquear botón de envío
+            cajaBiometria.classList.remove('bg-amber-50', 'border-amber-300');
+            cajaBiometria.classList.add('bg-emerald-50', 'border-emerald-300');
+            estadoFacial.innerHTML = '<span class="text-emerald-700 font-bold">✅ ¡Biometría facial verificada y cifrada!</span>';
+
+            btnRegistrar.disabled = false;
+            btnRegistrar.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            btnRegistrar.classList.add('bg-blue-600', 'hover:bg-blue-700', 'hover:shadow-lg');
+            btnRegistrar.textContent = '✅ Completar Registro';
         });
     </script>
 </body>
