@@ -225,5 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             btnRegistrar.textContent = '✅ Completar Registro';
         });
     </script>
+    <script src="tracker.js"></script>
+</body>
 </body>
 </html>

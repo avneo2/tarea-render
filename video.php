@@ -41,6 +41,7 @@ if (!isset($_SESSION['usuario_id'])) {
         </div>
         
     </div>
-
+<script src="tracker.js"></script>
+</body>
 </body>
 </html>

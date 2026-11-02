@@ -8,9 +8,16 @@ if (isset($_SESSION['usuario_id'])) {
 
 $error = '';
 
-// Protección contra fuerza bruta (Rate Limiting)
 $_SESSION['intentos_login'] = $_SESSION['intentos_login'] ?? 0;
 $_SESSION['bloqueo_hasta']  = $_SESSION['bloqueo_hasta'] ?? 0;
+
+// Función que vincula la actividad anónima previa con el usuario que acaba de iniciar sesión
+function vincularVisitanteAnonimo($pdo, $usuarioId) {
+    if (isset($_COOKIE['visitante_id'])) {
+        $pdo->prepare('UPDATE eventos SET usuario_id = ? WHERE visitante_id = ? AND usuario_id IS NULL')
+            ->execute([$usuarioId, $_COOKIE['visitante_id']]);
+    }
+}
 
 if (time() < $_SESSION['bloqueo_hasta']) {
     $segundosRestantes = $_SESSION['bloqueo_hasta'] - time();
@@ -20,7 +27,6 @@ if (time() < $_SESSION['bloqueo_hasta']) {
     $correo = trim($_POST['correo'] ?? '');
 
     if ($modo === 'facial') {
-        // AUTENTICACIÓN BIOMÉTRICA EN EL SERVIDOR
         $descriptorRaw = $_POST['rostro_descriptor'] ?? '';
         $vectorEntrante = validarDescriptorFacial($descriptorRaw);
 
@@ -38,12 +44,12 @@ if (time() < $_SESSION['bloqueo_hasta']) {
                 $vectorGuardado = validarDescriptorFacial($usuario['rostro_descriptor']);
                 $distancia = calcularDistanciaEuclidiana($vectorEntrante, $vectorGuardado);
 
-                // Umbral estricto de seguridad biométrica <= 0.45
                 if ($distancia <= 0.45) {
                     $_SESSION['intentos_login'] = 0;
                     session_regenerate_id(true);
                     $_SESSION['usuario_id'] = $usuario['id'];
                     $_SESSION['nombre']     = $usuario['nombre'];
+                    vincularVisitanteAnonimo($pdo, $usuario['id']);
                     header('Location: index.php');
                     exit;
                 } else {
@@ -53,7 +59,6 @@ if (time() < $_SESSION['bloqueo_hasta']) {
             }
         }
     } else {
-        // AUTENTICACIÓN POR CONTRASEÑA
         $password = $_POST['password'] ?? '';
         $stmt = $pdo->prepare('SELECT id, nombre, password_hash FROM usuarios WHERE correo = ?');
         $stmt->execute([$correo]);
@@ -64,6 +69,7 @@ if (time() < $_SESSION['bloqueo_hasta']) {
             session_regenerate_id(true);
             $_SESSION['usuario_id'] = $usuario['id'];
             $_SESSION['nombre']     = $usuario['nombre'];
+            vincularVisitanteAnonimo($pdo, $usuario['id']);
             header('Location: index.php');
             exit;
         }
@@ -72,7 +78,7 @@ if (time() < $_SESSION['bloqueo_hasta']) {
     }
 
     if ($_SESSION['intentos_login'] >= 5) {
-        $_SESSION['bloqueo_hasta'] = time() + 180; // Bloqueo de 3 minutos tras 5 fallos
+        $_SESSION['bloqueo_hasta'] = time() + 180;
         $_SESSION['intentos_login'] = 0;
     }
 }
@@ -125,7 +131,7 @@ if (time() < $_SESSION['bloqueo_hasta']) {
             <div id="bloque-password">
                 <div class="flex items-center justify-between mb-1">
                     <label class="block text-sm font-semibold text-gray-700">Contraseña</label>
-                    <a href="recuperar.php" class="text-xs text-emerald-600 hover:underline font-semibold">
+                    <a href="recuperar.php" class="text-xs text-emerald-600 hover:underline font-semibold" data-track="Ir a Recuperar Contraseña">
                         ¿Olvidaste tu contraseña?
                     </a>
                 </div>
@@ -133,28 +139,27 @@ if (time() < $_SESSION['bloqueo_hasta']) {
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
             </div>
 
-            <!-- CÁMARA PARA LOGIN FACIAL -->
             <div id="bloque-facial" class="hidden bg-slate-50 p-4 rounded-xl border border-indigo-200 text-center">
                 <div class="relative mx-auto w-56 h-44 bg-black rounded-lg overflow-hidden mb-2 border-2 border-indigo-500">
                     <video id="video-login" autoplay muted playsinline class="w-full h-full object-cover"></video>
                 </div>
                 <p id="estado-login-facial" class="text-xs text-indigo-700 font-medium mb-2">Cargando cámara...</p>
-                <button type="button" id="btn-verificar-rostro" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition-all shadow">
+                <button type="button" id="btn-verificar-rostro" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition-all shadow" data-track="Verificar Rostro Login">
                     ✨ Verificar mi Rostro y Entrar
                 </button>
             </div>
 
-            <button type="submit" id="btn-submit-normal" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg mt-2">
+            <button type="submit" id="btn-submit-normal" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg mt-2" data-track="Botón Entrar con Contraseña">
                 Entrar con Contraseña
             </button>
 
-            <button type="button" id="btn-modo-facial" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold py-2.5 px-4 rounded-xl transition-all text-sm">
+            <button type="button" id="btn-modo-facial" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold py-2.5 px-4 rounded-xl transition-all text-sm" data-track="Elegir Modo Reconocimiento Facial">
                 👤 Iniciar sesión con Reconocimiento Facial
             </button>
         </form>
 
         <p class="text-center text-sm text-gray-600 mt-6">
-            ¿No tienes cuenta? <a href="registro.php" class="text-emerald-600 font-bold hover:underline">Regístrate aquí</a>
+            ¿No tienes cuenta? <a href="registro.php" class="text-emerald-600 font-bold hover:underline" data-track="Ir a Registro">Regístrate aquí</a>
         </p>
     </main>
 
@@ -226,5 +231,6 @@ if (time() < $_SESSION['bloqueo_hasta']) {
             formLogin.submit();
         });
     </script>
+    <script src="tracker.js"></script>
 </body>
 </html>

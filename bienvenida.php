@@ -9,7 +9,6 @@ if (!isset($_SESSION['usuario_id'])) {
 $mensaje = '';
 $error   = '';
 
-// Procesar actualización de Fecha de Nacimiento o Rostro desde el perfil
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nuevaFecha = trim($_POST['fecha_nacimiento'] ?? '');
     $rostroRaw  = $_POST['rostro_descriptor'] ?? '';
@@ -55,17 +54,19 @@ $perfilCompleto = $tieneRostro && !empty($usuario['fecha_nacimiento']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Perfil - Portafolio Alex</title>
+    <title>Bienvenida - Portafolio Alex</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 font-sans text-gray-800 antialiased">
-    <main class="bg-white max-w-md w-full p-8 rounded-2xl shadow-xl border border-gray-200 text-center my-8">
+    <main class="bg-white max-w-xl w-full p-8 rounded-2xl shadow-xl border border-gray-200 text-center my-8">
+        <?php include 'menu.php'; ?>
+
         <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm">
             👋
         </div>
         <h1 class="text-2xl font-extrabold text-gray-900 mb-1">¡Hola, <?= e($usuario['nombre']) ?>!</h1>
-        <p class="text-emerald-600 font-medium text-sm mb-6">Sesión activa y verificada.</p>
+        <p class="text-emerald-600 font-medium text-sm mb-6">Iniciaste sesión correctamente.</p>
 
         <?php if (!$perfilCompleto): ?>
             <div class="bg-amber-50 border border-amber-300 text-amber-800 px-4 py-3 rounded-xl mb-4 text-xs font-bold">
@@ -91,6 +92,10 @@ $perfilCompleto = $tieneRostro && !empty($usuario['fecha_nacimiento']);
                 <span class="text-gray-900"><?= e($usuario['correo']) ?></span>
             </li>
             <li class="flex justify-between border-b border-gray-200 pb-2">
+                <span class="font-bold text-gray-600">Sexo:</span> 
+                <span class="text-gray-900"><?= e($usuario['sexo']) ?></span>
+            </li>
+            <li class="flex justify-between border-b border-gray-200 pb-2">
                 <span class="font-bold text-gray-600">Edad actual:</span> 
                 <span class="text-gray-900"><?= e((string)$edadExacta) ?> años</span>
             </li>
@@ -110,7 +115,6 @@ $perfilCompleto = $tieneRostro && !empty($usuario['fecha_nacimiento']);
             </li>
         </ul>
 
-        <!-- FORMULARIO PARA COMPLETAR O ACTUALIZAR FECHA Y ROSTRO -->
         <form method="post" class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 text-left space-y-3">
             <p class="text-xs font-bold text-slate-700 text-center">⚙️ Configurar Fecha de Nacimiento y Biometría</p>
             <input type="hidden" name="rostro_descriptor" id="rostro_descriptor">
@@ -141,8 +145,11 @@ $perfilCompleto = $tieneRostro && !empty($usuario['fecha_nacimiento']);
 
         <div class="flex flex-col gap-3">
             <?php if ($perfilCompleto): ?>
-                <a href="index.php" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md">
-                    ⬅️ Ir al portafolio principal
+                <a class="boton w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md" href="cursos.php" data-track="Ver catálogo (botón azul)">
+                    📚 Ver catálogo de cursos
+                </a>
+                <a class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md" href="dashboard.php" data-track="Ir a Métricas desde Perfil">
+                    📊 Ver panel de métricas
                 </a>
             <?php endif; ?>
             <a href="logout.php" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md">
@@ -189,5 +196,6 @@ $perfilCompleto = $tieneRostro && !empty($usuario['fecha_nacimiento']);
             estadoP.innerHTML = '<span class="text-emerald-600 font-bold">✅ Rostro listo. Presiona "Guardar Cambios en mi Cuenta".</span>';
         });
     </script>
+    <script src="tracker.js"></script>
 </body>
 </html>
