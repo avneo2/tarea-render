@@ -23,6 +23,7 @@ function e($texto)
 {
     return htmlspecialchars($texto ?? '', ENT_QUOTES, 'UTF-8');
 }
+
 // Validar que el descriptor tenga exactamente 128 puntos biométricos numéricos
 function validarDescriptorFacial($jsonStr)
 {
