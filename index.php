@@ -62,6 +62,10 @@ if (empty($datosSeguridad['rostro_descriptor']) || empty($datosSeguridad['fecha_
             <a href="ubicacion.php" data-track="Práctica: Mi Ubicación GPS" class="flex items-center justify-center bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg">
                 📍 7. Mi Ubicación (GPS + OpenStreetMap Leaflet)
             </a>
+
+            <a href="foto.php" data-track="Práctica 8: Subir Foto y Galería" class="flex items-center justify-center bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg">
+                📷 8. Captura y Galería de Fotos (Multipart API)
+            </a>
         </div>
     </div>
 

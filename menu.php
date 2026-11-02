@@ -12,6 +12,7 @@ function claseMenu($archivo, $actual) {
         <a href="bienvenida.php" class="<?= claseMenu('bienvenida.php', $paginaActual) ?>" data-track="Menú: Inicio">👤 Inicio</a>
         <a href="cursos.php" class="<?= claseMenu('cursos.php', $paginaActual) ?>" data-track="Menú: Cursos">📚 Cursos</a>
         <a href="ubicacion.php" class="<?= claseMenu('ubicacion.php', $paginaActual) ?>" data-track="Menú: Ubicación">📍 Ubicación</a>
+        <a href="foto.php" class="<?= claseMenu('foto.php', $paginaActual) ?>" data-track="Menú: Fotos">📷 Fotos</a>
         <a href="dashboard.php" class="<?= claseMenu('dashboard.php', $paginaActual) ?>" data-track="Menú: Métricas">📊 Métricas</a>
     </div>
     <div class="flex items-center gap-2">
