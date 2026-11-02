@@ -58,6 +58,10 @@ if (empty($datosSeguridad['rostro_descriptor']) || empty($datosSeguridad['fecha_
             <a href="dashboard.php" data-track="Práctica 6: Panel de Métricas" class="flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg">
                 📊 6. Dashboard de Métricas en Vivo (JSON API)
             </a>
+
+            <a href="ubicacion.php" data-track="Práctica: Mi Ubicación GPS" class="flex items-center justify-center bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg">
+                📍 7. Mi Ubicación (GPS + OpenStreetMap Leaflet)
+            </a>
         </div>
     </div>
 
