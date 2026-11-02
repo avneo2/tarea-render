@@ -33,9 +33,11 @@ function dato($clave)
     return (isset($_SERVER[$clave]) && $_SERVER[$clave] !== '') ? $_SERVER[$clave] : 'no disponible';
 }
 
-function e($texto)
-{
-    return htmlspecialchars((string) $texto, ENT_QUOTES, 'UTF-8');
+if (!function_exists('e')) {
+    function e($texto)
+    {
+        return htmlspecialchars((string) $texto, ENT_QUOTES, 'UTF-8');
+    }
 }
 
 $es_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
